@@ -13,7 +13,7 @@ const SECRET_KEY = "Microservice";
 // Load SSL certificates
 const options = {
   key: fs.readFileSync("localhost-key.pem"),
-  cert: fs.readFileSync("localhost.pem"),
+  cert: fs.readFileSync("localhost-cert.pem"),
 };
 
 const limiter = rateLimit({
@@ -56,7 +56,9 @@ function authorization(allowedRoles) {
       if (!allowedRoles.includes(user.role)) {
         return res
           .status(403)
-          .send("Forbidden: You do not have permission to access this resource");
+          .send(
+            "Forbidden: You do not have permission to access this resource"
+          );
       }
       req.user = user;
       next();

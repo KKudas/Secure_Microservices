@@ -2,6 +2,14 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
 const { body, param, validationResult } = require("express-validator");
+const https = require("https");
+const fs = require("fs");
+
+// Load SSL certificates
+const options = {
+  key: fs.readFileSync("localhost-key.pem"),
+  cert: fs.readFileSync("localhost-cert.pem"),
+};
 
 const app = express();
 const port = 3002;
@@ -147,6 +155,7 @@ app.delete("/users/:id", limiter, validateId(), validateRequest, (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`User service running on port ${port}`);
+// Secure HTTPS server
+https.createServer(options, app).listen(port, () => {
+  console.log(`Order service running securely on port ${port}`);
 });
