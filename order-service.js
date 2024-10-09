@@ -3,15 +3,23 @@ const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const rateLimit = require("express-rate-limit");
 const { body, param, validationResult } = require("express-validator");
+const https = require("https");
+const fs = require("fs");
 
 const app = express();
 const port = 3003;
 const SECRET_KEY = "Microservice";
 
+// Load SSL certificates
+const options = {
+  key: fs.readFileSync("localhost-key.pem"),
+  cert: fs.readFileSync("localhost.pem"),
+};
+
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 min
-  max: 10, // 10 request
-  message: "Too many request, try again later",
+  max: 10, // 10 requests
+  message: "Too many requests, try again later",
 });
 
 const validateRequest = (req, res, next) => {
@@ -48,9 +56,7 @@ function authorization(allowedRoles) {
       if (!allowedRoles.includes(user.role)) {
         return res
           .status(403)
-          .send(
-            "Forbidden: You do not have permission to access this resource"
-          );
+          .send("Forbidden: You do not have permission to access this resource");
       }
       req.user = user;
       next();
@@ -70,7 +76,7 @@ app.post(
       const productId = parseInt(req.body.productId);
 
       const productReq = await axios.get(
-        `http://localhost:3001/products/${productId}`
+        `https://localhost:3001/products/${productId}`
       );
 
       const data = {
@@ -136,7 +142,7 @@ app.put(
         const productId = parseInt(req.body.productId);
 
         const productReq = await axios.get(
-          `http://localhost:3001/products/${productId}`
+          `https://localhost:3001/products/${productId}`
         );
 
         orders[index] = { ...orders[index], ...req.body };
@@ -175,6 +181,7 @@ app.delete(
   }
 );
 
-app.listen(port, () => {
-  console.log(`Order service running on port ${port}`);
+// Secure HTTPS server
+https.createServer(options, app).listen(port, () => {
+  console.log(`Order service running securely on port ${port}`);
 });
