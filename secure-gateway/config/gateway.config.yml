@@ -1,8 +1,10 @@
-http:
+https:
   port: 8080
-  # tls:
-  # key: ../localhost-key.pem
-  # cert: ../localhost-cert.pem
+  hostname: localhost
+  tls:
+    "default":
+      key: "../localhost-key.pem"
+      cert: "../localhost-cert.pem"
 apiEndpoints:
   productsApi:
     host: localhost
@@ -15,11 +17,11 @@ apiEndpoints:
     paths: "/orders/*"
 serviceEndpoints:
   products:
-    url: http://localhost:3001
+    url: https://localhost:3001
   users:
-    url: http://localhost:3002
+    url: https://localhost:3002
   orders:
-    url: http://localhost:3003
+    url: https://localhost:3003
 
 policies:
   - basic-auth
