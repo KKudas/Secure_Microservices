@@ -1,0 +1,74 @@
+http:
+  port: 8080
+apiEndpoints:
+  productsApi:
+    host: localhost
+    paths: "/products/*"
+  usersApi:
+    host: localhost
+    paths: "/users/*"
+  ordersApi:
+    host: localhost
+    paths: "/orders/*"
+serviceEndpoints:
+  products:
+    url: http://localhost:3001
+  users:
+    url: http://localhost:3002
+  orders:
+    url: http://localhost:3003
+
+policies:
+  - basic-auth
+  - expression
+  - log
+  - proxy
+  - rate-limit
+  - jwt
+
+pipelines:
+  productsPipeline:
+    apiEndpoints:
+      - productsApi
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: products
+              conditions:
+                - http.request.method: "GET"
+                - http.request.path: "/products/[0-9]+$"
+          - action:
+              serviceEndpoint: products
+              conditions:
+                - http.request.method: "GET"
+                - http.request.path: "/products/all"
+      - jwt:
+          action:
+            secretOrPublicKey: "Microservice"
+            checkCredentialExistence: false
+  usersPipeline:
+    apiEndpoints:
+      - usersApi
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: users
+              conditions:
+                - http.request.method: "POST"
+                - http.request.path: "/users/login"
+          - action:
+              serviceEndpoint: users
+              conditions:
+                - http.request.method: "POST"
+                - http.request.path: "/users"
+  ordersPipeline:
+    apiEndpoints:
+      - ordersApi
+    policies:
+      - jwt:
+          action:
+            secretOrPublicKey: "Microservice"
+            checkCredentialExistence: false
+      - proxy:
+          - action:
+              serviceEndpoint: orders
