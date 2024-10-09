@@ -37,7 +37,7 @@ function authorization(allowedRoles) {
     const token = req.headers["authorization"]?.split(" ")[1];
 
     if (!token) {
-      return res.status(403).json("Unauthorized");
+      return res.status(403).json("Unauthorized Access");
     }
 
     jwt.verify(token, SECRET_KEY, (err, user) => {
@@ -82,26 +82,32 @@ app.post(
       orders.push(data);
       res.json(data);
     } catch (error) {
-      console.log(error);
       res.status(500).json({ message: error.message });
     }
   }
 );
 
 // GET /orders/all: [Admin] Get all order list
-app.get("/orders/all", limiter, authorization(["admin"]), (req, res) => {
-  try {
-    res.json(orders);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+app.get(
+  "/orders/all",
+  limiter,
+  validateRequest,
+  authorization(["admin"]),
+  (req, res) => {
+    try {
+      res.json(orders);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
-});
+);
 
 // GET /orders/:orderId: [Customer] Get order details.
 app.get(
   "/orders/:orderId",
   limiter,
   validateId(),
+  validateRequest,
   authorization(["customer"]),
   (req, res) => {
     try {
@@ -124,6 +130,7 @@ app.put(
   "/orders/:orderId",
   limiter,
   validateId(),
+  validateRequest,
   authorization(["customer"]),
   async (req, res) => {
     try {
@@ -155,6 +162,7 @@ app.delete(
   "/orders/:orderId",
   limiter,
   validateId(),
+  validateRequest,
   authorization(["customer"]),
   (req, res) => {
     try {
