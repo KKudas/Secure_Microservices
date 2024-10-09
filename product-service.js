@@ -36,7 +36,7 @@ function authorization(allowedRoles) {
     const token = req.headers["authorization"]?.split(" ")[1];
 
     if (!token) {
-      return res.status(403).json("Unauthorized");
+      return res.status(403).json("Unauthorized Access");
     }
 
     jwt.verify(token, SECRET_KEY, (err, user) => {
@@ -85,7 +85,7 @@ app.post(
 );
 
 // GET /products/all: Get all products
-app.get("/products/all", limiter, (req, res) => {
+app.get("/products/all", limiter, validateRequest, (req, res) => {
   try {
     res.json(products);
   } catch (error) {
@@ -94,26 +94,35 @@ app.get("/products/all", limiter, (req, res) => {
 });
 
 // GET /products/:productId: Get product details by ID.
-app.get("/products/:productId", limiter, validateId(), (req, res) => {
-  try {
-    const productId = parseInt(req.params.productId, 10);
-    const item = products.find((product) => product.productId === productId);
+app.get(
+  "/products/:productId",
+  limiter,
+  validateId(),
+  validateRequest,
+  (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId, 10);
+      const item = products.find((product) => product.productId === productId);
 
-    if (item) {
-      res.json(item);
-    } else {
-      res.status(404).json({ message: "Product not found" });
+      if (item) {
+        res.json(item);
+      } else {
+        res.status(404).json({ message: "Product not found" });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: "There was an error fetching the product" });
     }
-  } catch (error) {
-    res.status(500).json({ error: "There was an error fetching the product" });
   }
-});
+);
 
 // PUT /products/:productId: [Admin] Update a product
 app.put(
   "/products/:productId",
   limiter,
   validateId(),
+  validateRequest,
   authorization(["admin"]),
   (req, res) => {
     try {
@@ -141,6 +150,7 @@ app.delete(
   "/products/:productId",
   limiter,
   validateId(),
+  validateRequest,
   authorization(["admin"]),
   (req, res) => {
     try {
