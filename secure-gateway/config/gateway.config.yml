@@ -1,5 +1,8 @@
 http:
   port: 8080
+  tls:
+  key: ../localhost-key.pem
+  cert: ../localhost-cert.pem
 apiEndpoints:
   productsApi:
     host: localhost
