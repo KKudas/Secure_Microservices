@@ -34,6 +34,10 @@ const validateId = () => {
   return [param("orderId").trim().escape().isInt({ min: 1 })];
 };
 
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false,
+});
+
 app.use(express.json());
 
 let orderId = 1;
@@ -78,7 +82,10 @@ app.post(
       const productId = parseInt(req.body.productId);
 
       const productReq = await axios.get(
-        `https://localhost:3001/products/${productId}`
+        `https://localhost:3001/${productId}`,
+        {
+          httpsAgent,
+        }
       );
 
       const data = {
@@ -151,7 +158,10 @@ app.put(
         const productId = parseInt(req.body.productId);
 
         const productReq = await axios.get(
-          `https://localhost:3001/products/${productId}`
+          `https://localhost:3001/${productId}`,
+          {
+            httpsAgent,
+          }
         );
 
         orders[index] = { ...orders[index], ...req.body };

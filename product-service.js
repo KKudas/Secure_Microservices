@@ -38,13 +38,13 @@ app.use(express.json());
 let productId = 1;
 let products = [];
 
-// Authorization middleware to check user roles
+// Check Token and Authorization middleware to check user roles
 function authorization(allowedRoles) {
   return (req, res, next) => {
     const token = req.headers["authorization"]?.split(" ")[1];
 
     if (!token) {
-      return res.status(403).json("Unauthorized Access");
+      return res.status(403).json("Unauthorized");
     }
 
     jwt.verify(token, SECRET_KEY, (err, user) => {
@@ -102,28 +102,20 @@ app.get("/all", limiter, validateRequest, (req, res) => {
 });
 
 // GET /:productId: Get product details by ID.
-app.get(
-  "/:productId",
-  limiter,
-  validateId(),
-  validateRequest,
-  (req, res) => {
-    try {
-      const productId = parseInt(req.params.productId, 10);
-      const item = products.find((product) => product.productId === productId);
+app.get("/:productId", limiter, validateId(), validateRequest, (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId, 10);
+    const item = products.find((product) => product.productId === productId);
 
-      if (item) {
-        res.json(item);
-      } else {
-        res.status(404).json({ message: "Product not found" });
-      }
-    } catch (error) {
-      res
-        .status(500)
-        .json({ error: "There was an error fetching the product" });
+    if (item) {
+      res.json(item);
+    } else {
+      res.status(404).json({ message: "Product not found" });
     }
+  } catch (error) {
+    res.status(500).json({ error: "There was an error fetching the product" });
   }
-);
+});
 
 // PUT /:productId: [Admin] Update a product
 app.put(

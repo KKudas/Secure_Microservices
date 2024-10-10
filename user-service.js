@@ -42,6 +42,7 @@ app.use(express.json());
 let id = 1;
 let users = [];
 
+// Generate JWT Token
 function generateToken(user) {
   const payload = {
     id: user.id,
@@ -50,9 +51,9 @@ function generateToken(user) {
   return jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
 }
 
-// POST /users/login: Login
+// POST /login: Login
 app.post(
-  "/users/login",
+  "/login",
   limiter,
   validateBody("username"),
   validateBody("password"),
