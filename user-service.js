@@ -77,9 +77,9 @@ app.post(
   }
 );
 
-// POST /users: Add a new user.
+// POST /: Add a new user.
 app.post(
-  "/users",
+  "/",
   limiter,
   validateBody("username"),
   validateBody("password"),
@@ -101,8 +101,8 @@ app.post(
   }
 );
 
-// GET /users/:userId: Get user details by ID.
-app.get("/users/:id", limiter, validateId(), validateRequest, (req, res) => {
+// GET /:id: Get user details by ID.
+app.get("/:id", limiter, validateId(), validateRequest, (req, res) => {
   try {
     const userId = parseInt(req.params.id, 10);
     const data = users.find((user) => user.id === userId);
@@ -117,8 +117,8 @@ app.get("/users/:id", limiter, validateId(), validateRequest, (req, res) => {
   }
 });
 
-// PUT /users/:userId: Update user information
-app.put("/users/:id", limiter, validateId(), validateRequest, (req, res) => {
+// PUT /id: Update user information
+app.put("/:id", limiter, validateId(), validateRequest, (req, res) => {
   try {
     const userId = parseInt(req.params.id, 10);
     const index = users.findIndex((user) => {
@@ -137,7 +137,7 @@ app.put("/users/:id", limiter, validateId(), validateRequest, (req, res) => {
 });
 
 // DELETE /users/:userId: Delete a user.
-app.delete("/users/:id", limiter, validateId(), validateRequest, (req, res) => {
+app.delete("/:id", limiter, validateId(), validateRequest, (req, res) => {
   try {
     const userId = parseInt(req.params.id, 10);
     const index = users.findIndex((user) => {

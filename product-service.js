@@ -65,9 +65,9 @@ function authorization(allowedRoles) {
   };
 }
 
-// POST /products: [Admin] Add a new product.
+// POST /: [Admin] Add a new product.
 app.post(
-  "/products",
+  "/",
   limiter,
   [
     body("prodName").notEmpty().isString().trim().escape(),
@@ -92,8 +92,8 @@ app.post(
   }
 );
 
-// GET /products/all: Get all products
-app.get("/products/all", limiter, validateRequest, (req, res) => {
+// GET /all: Get all products
+app.get("/all", limiter, validateRequest, (req, res) => {
   try {
     res.json(products);
   } catch (error) {
@@ -101,9 +101,9 @@ app.get("/products/all", limiter, validateRequest, (req, res) => {
   }
 });
 
-// GET /products/:productId: Get product details by ID.
+// GET /:productId: Get product details by ID.
 app.get(
-  "/products/:productId",
+  "/:productId",
   limiter,
   validateId(),
   validateRequest,
@@ -125,9 +125,9 @@ app.get(
   }
 );
 
-// PUT /products/:productId: [Admin] Update a product
+// PUT /:productId: [Admin] Update a product
 app.put(
-  "/products/:productId",
+  "/:productId",
   limiter,
   validateId(),
   validateRequest,
@@ -153,9 +153,9 @@ app.put(
   }
 );
 
-// DELETE /products/:productId: [Admin] Delete a product
+// DELETE /:productId: [Admin] Delete a product
 app.delete(
-  "/products/:productId",
+  "/:productId",
   limiter,
   validateId(),
   validateRequest,

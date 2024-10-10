@@ -66,9 +66,9 @@ function authorization(allowedRoles) {
   };
 }
 
-// POST /orders: [Customer] Create a new order
+// POST /: [Customer] Create a new order
 app.post(
-  "/orders",
+  "/",
   limiter,
   body("productId").trim().isInt({ min: 1 }),
   validateRequest,
@@ -97,7 +97,7 @@ app.post(
 
 // GET /orders/all: [Admin] Get all order list
 app.get(
-  "/orders/all",
+  "/all",
   limiter,
   validateRequest,
   authorization(["admin"]),
@@ -112,7 +112,7 @@ app.get(
 
 // GET /orders/:orderId: [Customer] Get order details.
 app.get(
-  "/orders/:orderId",
+  "/:orderId",
   limiter,
   validateId(),
   validateRequest,
@@ -133,9 +133,9 @@ app.get(
   }
 );
 
-// PUT /orders/:orderId: [Customer] Update an order.
+// PUT /:orderId: [Customer] Update an order.
 app.put(
-  "/orders/:orderId",
+  "/:orderId",
   limiter,
   validateId(),
   validateRequest,
@@ -165,9 +165,9 @@ app.put(
   }
 );
 
-// DELETE /orders/:orderId: [Customer] Delete an order.
+// DELETE /:orderId: [Customer] Delete an order.
 app.delete(
-  "/orders/:orderId",
+  "/:orderId",
   limiter,
   validateId(),
   validateRequest,
