@@ -1,79 +1,34 @@
+// Dependencies
 const express = require("express");
-const jwt = require("jsonwebtoken");
-const rateLimit = require("express-rate-limit");
-const { body, param, validationResult } = require("express-validator");
 const https = require("https");
 const fs = require("fs");
 
+// Middlewares
+const { authorization } = require("./middleware/authorization.js");
+const {
+  validateId,
+  validateProductParams,
+} = require("./middleware/sanitation.js");
+const limiter = require("./middleware/limiter.js");
+
 // Load SSL certificates
 const options = {
-  key: fs.readFileSync("localhost-key.pem"),
-  cert: fs.readFileSync("localhost-cert.pem"),
+  key: fs.readFileSync("./certs/localhost-key.pem"),
+  cert: fs.readFileSync("./certs/localhost-cert.pem"),
 };
 
 const app = express();
 const port = 3001;
-const SECRET_KEY = "Microservice";
-
-const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 min
-  max: 10, // 10 request
-  message: "Too many request, try again later",
-});
-
-const validateRequest = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  next();
-};
-
-const validateId = () => {
-  return [param("productId").trim().escape().isInt({ min: 1 })];
-};
-
 app.use(express.json());
 
 let productId = 1;
 let products = [];
 
-// Check Token and Authorization middleware to check user roles
-function authorization(allowedRoles) {
-  return (req, res, next) => {
-    const token = req.headers["authorization"]?.split(" ")[1];
-
-    if (!token) {
-      return res.status(403).json("Unauthorized");
-    }
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-      if (err) {
-        return res.status(403).send("Forbidden");
-      }
-
-      if (!allowedRoles.includes(user.role)) {
-        return res
-          .status(403)
-          .send(
-            "Forbidden: You do not have permission to access this resource"
-          );
-      }
-      req.user = user;
-      next();
-    });
-  };
-}
-
 // POST /: [Admin] Add a new product.
 app.post(
   "/",
   limiter,
-  [
-    body("prodName").notEmpty().isString().trim().escape(),
-    body("prodPrice").trim().escape().isInt({ min: 1 }),
-  ],
-  validateRequest,
+  validateProductParams(),
   authorization(["admin"]),
   (req, res) => {
     try {
@@ -93,7 +48,7 @@ app.post(
 );
 
 // GET /all: Get all products
-app.get("/all", limiter, validateRequest, (req, res) => {
+app.get("/all", limiter, (req, res) => {
   try {
     res.json(products);
   } catch (error) {
@@ -102,7 +57,7 @@ app.get("/all", limiter, validateRequest, (req, res) => {
 });
 
 // GET /:productId: Get product details by ID.
-app.get("/:productId", limiter, validateId(), validateRequest, (req, res) => {
+app.get("/:productId", limiter, validateId("productId"), (req, res) => {
   try {
     const productId = parseInt(req.params.productId, 10);
     const item = products.find((product) => product.productId === productId);
@@ -121,8 +76,7 @@ app.get("/:productId", limiter, validateId(), validateRequest, (req, res) => {
 app.put(
   "/:productId",
   limiter,
-  validateId(),
-  validateRequest,
+  validateId("productId"),
   authorization(["admin"]),
   (req, res) => {
     try {
@@ -149,8 +103,7 @@ app.put(
 app.delete(
   "/:productId",
   limiter,
-  validateId(),
-  validateRequest,
+  validateId("productId"),
   authorization(["admin"]),
   (req, res) => {
     try {

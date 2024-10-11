@@ -1,81 +1,39 @@
+// Dependencies
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const axios = require("axios");
-const rateLimit = require("express-rate-limit");
-const { body, param, validationResult } = require("express-validator");
 const https = require("https");
 const fs = require("fs");
 
+// Middlewares
+const { authorization } = require("./middleware/authorization.js");
+const {
+  validateId,
+  validateOrderParams,
+} = require("./middleware/sanitation.js");
+const limiter = require("./middleware/limiter.js");
+
 const app = express();
 const port = 3003;
-const SECRET_KEY = "Microservice";
+app.use(express.json());
 
 // Load SSL certificates
 const options = {
-  key: fs.readFileSync("localhost-key.pem"),
-  cert: fs.readFileSync("localhost-cert.pem"),
-};
-
-const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 min
-  max: 10, // 10 requests
-  message: "Too many requests, try again later",
-});
-
-const validateRequest = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  next();
-};
-
-const validateId = () => {
-  return [param("orderId").trim().escape().isInt({ min: 1 })];
+  key: fs.readFileSync("./certs/localhost-key.pem"),
+  cert: fs.readFileSync("./certs/localhost-cert.pem"),
 };
 
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false,
 });
 
-app.use(express.json());
-
 let orderId = 1;
 let orders = [];
-
-// Authorization middleware to check user roles
-function authorization(allowedRoles) {
-  return (req, res, next) => {
-    const token = req.headers["authorization"]?.split(" ")[1];
-
-    if (!token) {
-      return res.status(403).json("Unauthorized Access");
-    }
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-      if (err) {
-        return res.status(403).send("Forbidden");
-      }
-
-      if (!allowedRoles.includes(user.role)) {
-        return res
-          .status(403)
-          .send(
-            "Forbidden: You do not have permission to access this resource"
-          );
-      }
-      req.user = user;
-      next();
-    });
-  };
-}
 
 // POST /: [Customer] Create a new order
 app.post(
   "/",
   limiter,
-  body("productId").trim().isInt({ min: 1 }),
-  validateRequest,
+  validateOrderParams(),
   authorization(["customer"]),
   async (req, res) => {
     try {
@@ -90,8 +48,9 @@ app.post(
 
       const data = {
         orderId: orderId++,
-        productId: req.body.productId,
         userId: req.user.id,
+        productId: req.body.productId,
+        quantity: req.body.quantity,
       };
 
       orders.push(data);
@@ -103,26 +62,19 @@ app.post(
 );
 
 // GET /orders/all: [Admin] Get all order list
-app.get(
-  "/all",
-  limiter,
-  validateRequest,
-  authorization(["admin"]),
-  (req, res) => {
-    try {
-      res.json(orders);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
+app.get("/all", limiter, authorization(["admin"]), (req, res) => {
+  try {
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-);
+});
 
 // GET /orders/:orderId: [Customer] Get order details.
 app.get(
   "/:orderId",
   limiter,
-  validateId(),
-  validateRequest,
+  validateId("orderId"),
   authorization(["customer"]),
   (req, res) => {
     try {
@@ -130,6 +82,9 @@ app.get(
       const data = orders.find((order) => order.orderId === orderId);
 
       if (data) {
+        if (data.userId !== req.user.id) {
+          return res.status(403).json({ message: "Unauthorized Access" });
+        }
         res.json(data);
       } else {
         res.status(404).json({ message: "Order not found" });
@@ -144,8 +99,7 @@ app.get(
 app.put(
   "/:orderId",
   limiter,
-  validateId(),
-  validateRequest,
+  validateId("orderId"),
   authorization(["customer"]),
   async (req, res) => {
     try {
@@ -155,6 +109,11 @@ app.put(
       });
 
       if (index !== -1) {
+        const order = orders[index];
+        if (order.userId !== req.user.id) {
+          return res.status(403).json({ message: "Unauthorized Access" });
+        }
+
         const productId = parseInt(req.body.productId);
 
         const productReq = await axios.get(
@@ -179,8 +138,7 @@ app.put(
 app.delete(
   "/:orderId",
   limiter,
-  validateId(),
-  validateRequest,
+  validateId("orderId"),
   authorization(["customer"]),
   (req, res) => {
     try {
@@ -190,6 +148,11 @@ app.delete(
       });
 
       if (index !== -1) {
+        const order = orders[index];
+        if (order.userId !== req.user.id) {
+          return res.status(403).json({ message: "Unauthorized Access" });
+        }
+
         orders.splice(index, 1);
         res.status(200).json({ message: "Order successfully deleted" });
       } else {
