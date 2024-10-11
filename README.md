@@ -3,6 +3,11 @@ Created by:
 - Ralph Miguel Mandigma
 - Kyle Tubod 
 
+## Note
+- Supposed output for all implementation for the Midterm requirements
+- **NOT to be merged in Main branch nor is used for submission**
+- For documentation purposes only
+
 ## Project Overview
 
 This project demonstrates a simple microservice involving three independent microservices:
