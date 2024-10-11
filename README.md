@@ -1,12 +1,12 @@
-# Midterm: Secure_Microservices 
+# NOTE (PLEASE READ)
+- Supposed output for all implementation for the Midterm requirements
+- **NOT to be merged in Main branch NOR is used for submission**
+- For documentation purposes only
+
+## Midterm: Secure_Microservices 
 Created by:
 - Ralph Miguel Mandigma
-- Kyle Tubod 
-
-## Note
-- Supposed output for all implementation for the Midterm requirements
-- **NOT to be merged in Main branch nor is used for submission**
-- For documentation purposes only
+- Kyle Tubod
 
 ## Project Overview
 
