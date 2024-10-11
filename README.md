@@ -1,6 +1,7 @@
 # NOTE (PLEASE READ)
 - Supposed output for all implementation for the Midterm requirements
-- **NOT to be merged in Main branch NOR is used for submission**
+- **NOT to be merged in Main branch**
+- **NOT for submission. Refer to Main Branch for our submission**
 - For documentation purposes only
 
 ## Midterm: Secure_Microservices 
